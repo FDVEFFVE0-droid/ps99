@@ -1,5 +1,5 @@
 -- =================================================================
---   PET SIMULATOR 99 - AUTOMATION & QUEST ENGINE (V2.0)
+--   PET SIMULATOR 99 - AUTOMATION & QUEST ENGINE (V2.1)
 --   Interface Style GanjaHub / REDz | Touche F pour Ouvrir/Fermer
 -- =================================================================
 
@@ -11,12 +11,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local root = player.Character and player.Character:WaitForChild("HumanoidRootPart")
 
--- Synchronisation de la position en cas de réapparition
 player.CharacterAdded:Connect(function(char)
     root = char:WaitForChild("HumanoidRootPart")
 end)
 
--- Table des états globales pour les fonctionnalités (Toggles)
 local States = {
     AutoCollect = false,
     AutoTap = false,
@@ -26,11 +24,10 @@ local States = {
     AutoPotions = false
 }
 
--- Récupération sécurisée du dossier réseau de PS99
 local Network = ReplicatedStorage:WaitForChild("Network")
 
 -- =================================================================
---   LOGIQUE ET BOUCLES DE FARM (BACKGROUND SCRIPTS)
+--   LOGIQUE ET BOUCLES DE FARM
 -- =================================================================
 
 -- 1. Auto Collect Orbs & Lootbags
@@ -57,7 +54,7 @@ task.spawn(function()
     end
 end)
 
--- 2. Auto Clicker intelligent (Cibles prioritaires / Quêtes)
+-- 2. Auto Clicker intelligent
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -85,7 +82,7 @@ task.spawn(function()
     end
 end)
 
--- 3. Tracker Visuel d'Objets Cachés (Highlight Bleu)
+-- 3. Tracker Visuel d'Objets Cachés
 local function UpdateTrackers()
     for _, v in pairs(Workspace:GetDescendants()) do
         if v:IsA("Model") and (v.Name:lower():find("shiny") or v.Name:lower():find("chest") or v.Name:lower():find("gift") or v.Name:lower():find("lucky")) then
@@ -111,7 +108,7 @@ task.spawn(function()
     end
 end)
 
--- 4. Auto Claim Récompenses (Free Gifts & Ranks)
+-- 4. Auto Claim Récompenses
 task.spawn(function()
     while true do
         task.wait(15)
@@ -132,7 +129,7 @@ task.spawn(function()
     end
 end)
 
--- 5. Sniper Automatique de Distributeurs (Vending Machines)
+-- 5. Sniper Automatique de Distributeurs
 local vendingMachines = {"Potion Vending Machine", "Enchant Vending Machine", "Fruit Vending Machine"}
 task.spawn(function()
     while true do
@@ -144,14 +141,14 @@ task.spawn(function()
                     end
                 end
             end)
-            task.wait(60) -- Ne vérifie qu'une fois par minute pour éviter la surcharge réseau
+            task.wait(60)
         else
             task.wait(2)
         end
     end
 end)
 
--- 6. Auto-Consommation des Potions (Maintien des Buffs Actifs)
+-- 6. Auto-Consommation des Potions (Correction apportée ici)
 local basePotions = {"Coins Potion I", "Damage Potion I", "Lucky Potion I", "Treasure Hunter Potion I"}
 task.spawn(function()
     while true do
@@ -160,7 +157,7 @@ task.spawn(function()
             pcall(function()
                 if Network:FindFirstChild("Potions_Activate") then
                     for _, potion in pairs(basePotions) do
-                        Network.Potions_Activate: things.FireServer(potion)
+                        Network.Potions_Activate:FireServer(potion)
                     end
                 end
             end)
@@ -170,7 +167,7 @@ end)
 
 
 -- =================================================================
---   INTERFACE GRAPHIQUE PROFESSIONNELLE (UI DESIGN)
+--   INTERFACE GRAPHIQUE PROFESSIONNELLE
 -- =================================================================
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -178,25 +175,22 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Name = "PS99_GanjaHub_Edition"
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Fenêtre Principale
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 440, 0, 520)
 MainFrame.Position = UDim2.new(0.5, -220, 0.5, -260)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- Rend la fenêtre déplaçable à la souris
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
--- Ligne d'effet néon supérieure (Border Glow)
 local PremiumStroke = Instance.new("UIStroke")
 PremiumStroke.Color = Color3.fromRGB(130, 90, 255)
 PremiumStroke.Thickness = 1.8
 PremiumStroke.Parent = MainFrame
 
--- Bannière du Titre
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 60)
 TitleBar.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
@@ -217,7 +211,6 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
--- Conteneur Défilant (ScrollingFrame pour alignement parfait)
 local Container = Instance.new("ScrollingFrame")
 Container.Size = UDim2.new(1, -20, 1, -85)
 Container.Position = UDim2.new(0, 10, 0, 75)
@@ -232,12 +225,10 @@ local ListLayout = Instance.new("UIListLayout", Container)
 ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 ListLayout.Padding = UDim.new(0, 8)
 
--- Ajustement dynamique de la zone défilante selon le nombre de boutons
 ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     Container.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
 end)
 
--- Fonction Génératrice de Toggles
 local function CreateToggle(text, stateKey, callback)
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Size = UDim2.new(1, -6, 0, 50)
@@ -286,7 +277,7 @@ local function CreateToggle(text, stateKey, callback)
 end
 
 -- =================================================================
---   INITIALISATION DES OPTIONS DE L'INTERFACE
+--   INITIALISATION DES OPTIONS
 -- =================================================================
 
 CreateToggle("Auto Collect (Orbes & Sacs)", "AutoCollect")
@@ -296,7 +287,6 @@ CreateToggle("Auto Claim (Cadeaux Horaires & Ranks)", "AutoClaimGifts")
 CreateToggle("Sniper Distributeurs (Vending Machines)", "AutoVending")
 CreateToggle("Auto Potions (Maintien des Buffs T1)", "AutoPotions")
 
--- Encart informatif de bas de page
 local InfoPanel = Instance.new("Frame")
 InfoPanel.Size = UDim2.new(1, -6, 0, 65)
 InfoPanel.BackgroundColor3 = Color3.fromRGB(22, 28, 45)
@@ -316,7 +306,6 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.TextYAlignment = Enum.TextYAlignment.Center
 InfoLabel.Parent = InfoPanel
 
--- Système d'ouverture/fermeture par touche clavier (F)
 UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.F then
         MainFrame.Visible = not MainFrame.Visible
