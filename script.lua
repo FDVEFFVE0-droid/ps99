@@ -1,5 +1,5 @@
 -- =================================================================
---   PET SIMULATOR 99 - AUTOMATION & QUEST ENGINE (V2.1)
+--   PET SIMULATOR 99 - AUTOMATION & QUEST ENGINE (V2.2 CORRIGÉ)
 --   Interface Style GanjaHub / REDz | Touche F pour Ouvrir/Fermer
 -- =================================================================
 
@@ -7,14 +7,11 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-local root = player.Character and player.Character:WaitForChild("HumanoidRootPart")
 
-player.CharacterAdded:Connect(function(char)
-    root = char:WaitForChild("HumanoidRootPart")
-end)
-
+-- Table des états globales pour les fonctionnalités (Toggles)
 local States = {
     AutoCollect = false,
     AutoTap = false,
@@ -24,150 +21,22 @@ local States = {
     AutoPotions = false
 }
 
-local Network = ReplicatedStorage:WaitForChild("Network")
-
--- =================================================================
---   LOGIQUE ET BOUCLES DE FARM
--- =================================================================
-
--- 1. Auto Collect Orbs & Lootbags
-task.spawn(function()
-    while true do
-        task.wait(0.2)
-        if States.AutoCollect and root then
-            pcall(function()
-                local things = Workspace:FindFirstChild("__THINGS")
-                if things then
-                    if things:FindFirstChild("Orbs") then
-                        for _, v in pairs(things.Orbs:GetChildren()) do
-                            if v:IsA("BasePart") then v.CFrame = root.CFrame end
-                        end
-                    end
-                    if things:FindFirstChild("Lootbags") then
-                        for _, v in pairs(things.Lootbags:GetChildren()) do
-                            if v:IsA("BasePart") then v.CFrame = root.CFrame end
-                        end
-                    end
-                end
-            end)
-        end
+-- Helper fonction sécurisée pour récupérer le HumanoidRootPart du joueur
+local function getRootPart()
+    local char = player.Character
+    if char then
+        return char:FindFirstChild("HumanoidRootPart")
     end
-end)
-
--- 2. Auto Clicker intelligent
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if States.AutoTap and root then
-            pcall(function()
-                local breakables = Workspace:FindFirstChild("__THINGS") and Workspace.__THINGS:FindFirstChild("Breakables")
-                if breakables then
-                    local closest = nil
-                    local minDist = math.huge
-                    for _, v in pairs(breakables:GetChildren()) do
-                        if v:IsA("Model") and v:PrimaryPart then
-                            local dist = (v.PrimaryPart.Position - root.Position).Magnitude
-                            if dist < minDist then
-                                minDist = dist
-                                closest = v
-                            end
-                        end
-                    end
-                    if closest and Network:FindFirstChild("Tap") then
-                        Network.Tap:FireServer(closest.Name)
-                    end
-                end
-            end)
-        end
-    end
-end)
-
--- 3. Tracker Visuel d'Objets Cachés
-local function UpdateTrackers()
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("Model") and (v.Name:lower():find("shiny") or v.Name:lower():find("chest") or v.Name:lower():find("gift") or v.Name:lower():find("lucky")) then
-            if States.ItemTracker then
-                if not v:FindFirstChild("Highlight") then
-                    local hl = Instance.new("Highlight")
-                    hl.FillColor = Color3.fromRGB(0, 170, 255)
-                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-                    hl.FillTransparency = 0.4
-                    hl.Parent = v
-                end
-            else
-                if v:FindFirstChild("Highlight") then v.Highlight:Destroy() end
-            end
-        end
-    end
+    return nil
 end
 
-task.spawn(function()
-    while true do
-        task.wait(4)
-        if States.ItemTracker then UpdateTrackers() end
-    end
-end)
-
--- 4. Auto Claim Récompenses
-task.spawn(function()
-    while true do
-        task.wait(15)
-        if States.AutoClaimGifts then
-            pcall(function()
-                if Network:FindFirstChild("FreeGifts_Claim") then
-                    for i = 1, 12 do
-                        Network.FreeGifts_Claim:InvokeServer(i)
-                    end
-                end
-                if Network:FindFirstChild("Ranks_ClaimReward") then
-                    for i = 1, 5 do
-                        Network.Ranks_ClaimReward:InvokeServer(i)
-                    end
-                end
-            end)
-        end
-    end
-end)
-
--- 5. Sniper Automatique de Distributeurs
-local vendingMachines = {"Potion Vending Machine", "Enchant Vending Machine", "Fruit Vending Machine"}
-task.spawn(function()
-    while true do
-        if States.AutoVending then
-            pcall(function()
-                if Network:FindFirstChild("VendingMachine_Purchase") then
-                    for _, machine in pairs(vendingMachines) do
-                        Network.VendingMachine_Purchase:InvokeServer(machine, 1)
-                    end
-                end
-            end)
-            task.wait(60)
-        else
-            task.wait(2)
-        end
-    end
-end)
-
--- 6. Auto-Consommation des Potions (Correction apportée ici)
-local basePotions = {"Coins Potion I", "Damage Potion I", "Lucky Potion I", "Treasure Hunter Potion I"}
-task.spawn(function()
-    while true do
-        task.wait(10)
-        if States.AutoPotions then
-            pcall(function()
-                if Network:FindFirstChild("Potions_Activate") then
-                    for _, potion in pairs(basePotions) do
-                        Network.Potions_Activate:FireServer(potion)
-                    end
-                end
-            end)
-        end
-    end
-end)
-
+-- Helper fonction pour trouver le dossier Network sans bloquer le script
+local function getNetwork()
+    return ReplicatedStorage:FindFirstChild("Network")
+end
 
 -- =================================================================
---   INTERFACE GRAPHIQUE PROFESSIONNELLE
+--   1. INTERFACE GRAPHIQUE (CHARGEMENT PRIORITAIRE ET IMMÉDIAT)
 -- =================================================================
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -175,22 +44,24 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Name = "PS99_GanjaHub_Edition"
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- Fenêtre Principale
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 440, 0, 520)
 MainFrame.Position = UDim2.new(0.5, -220, 0.5, -260)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
+-- Ligne d'effet néon supérieure (Border Glow)
 local PremiumStroke = Instance.new("UIStroke")
 PremiumStroke.Color = Color3.fromRGB(130, 90, 255)
 PremiumStroke.Thickness = 1.8
 PremiumStroke.Parent = MainFrame
 
+-- Bannière du Titre
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 60)
 TitleBar.BackgroundColor3 = Color3.fromRGB(26, 26, 38)
@@ -211,6 +82,36 @@ Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
+-- Système de Drag (Déplacement de la fenêtre fluide)
+local dragging, dragInput, dragStart, startPos
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Conteneur Défilant (ScrollingFrame)
 local Container = Instance.new("ScrollingFrame")
 Container.Size = UDim2.new(1, -20, 1, -85)
 Container.Position = UDim2.new(0, 10, 0, 75)
@@ -229,6 +130,7 @@ ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     Container.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 10)
 end)
 
+-- Fonction Génératrice de Toggles
 local function CreateToggle(text, stateKey, callback)
     local ToggleFrame = Instance.new("Frame")
     ToggleFrame.Size = UDim2.new(1, -6, 0, 50)
@@ -276,17 +178,15 @@ local function CreateToggle(text, stateKey, callback)
     end)
 end
 
--- =================================================================
---   INITIALISATION DES OPTIONS
--- =================================================================
-
+-- Instanciation des Boutons
 CreateToggle("Auto Collect (Orbes & Sacs)", "AutoCollect")
 CreateToggle("Auto Clicker Rapide (Breakables)", "AutoTap")
-CreateToggle("Tracker d'Objets Quêtes (Glow Bleu)", "ItemTracker", function(val) UpdateTrackers() end)
+CreateToggle("Tracker d'Objets Quêtes (Glow Bleu)", "ItemTracker", function(val) pcall(UpdateTrackers) end)
 CreateToggle("Auto Claim (Cadeaux Horaires & Ranks)", "AutoClaimGifts")
 CreateToggle("Sniper Distributeurs (Vending Machines)", "AutoVending")
 CreateToggle("Auto Potions (Maintien des Buffs T1)", "AutoPotions")
 
+-- Encart informatif de bas de page
 local InfoPanel = Instance.new("Frame")
 InfoPanel.Size = UDim2.new(1, -6, 0, 65)
 InfoPanel.BackgroundColor3 = Color3.fromRGB(22, 28, 45)
@@ -306,10 +206,157 @@ InfoLabel.Font = Enum.Font.Gotham
 InfoLabel.TextYAlignment = Enum.TextYAlignment.Center
 InfoLabel.Parent = InfoPanel
 
+
+-- =================================================================
+--   2. LOGIQUE ET BOUCLES DE FARM (SÉCURISÉES PAR PCALL)
+-- =================================================================
+
+-- 1. Auto Collect Orbs & Lootbags
+task.spawn(function()
+    while true do
+        task.wait(0.3)
+        local root = getRootPart()
+        if States.AutoCollect and root then
+            pcall(function()
+                local things = Workspace:FindFirstChild("__THINGS")
+                if things then
+                    if things:FindFirstChild("Orbs") then
+                        for _, v in pairs(things.Orbs:GetChildren()) do
+                            if v:IsA("BasePart") then v.CFrame = root.CFrame end
+                        end
+                    end
+                    if things:FindFirstChild("Lootbags") then
+                        for _, v in pairs(things.Lootbags:GetChildren()) do
+                            if v:IsA("BasePart") then v.CFrame = root.CFrame end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- 2. Auto Clicker intelligent
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        local root = getRootPart()
+        local net = getNetwork()
+        if States.AutoTap and root and net then
+            pcall(function()
+                local breakables = Workspace:FindFirstChild("__THINGS") and Workspace.__THINGS:FindFirstChild("Breakables")
+                if breakables then
+                    local closest = nil
+                    local minDist = math.huge
+                    for _, v in pairs(breakables:GetChildren()) do
+                        if v:IsA("Model") and v:PrimaryPart then
+                            local dist = (v.PrimaryPart.Position - root.Position).Magnitude
+                            if dist < minDist then
+                                minDist = dist
+                                closest = v
+                            end
+                        end
+                    end
+                    if closest and net:FindFirstChild("Tap") then
+                        net.Tap:FireServer(closest.Name)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- 3. Tracker Visuel d'Objets Cachés
+function UpdateTrackers()
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if v:IsA("Model") and (v.Name:lower():find("shiny") or v.Name:lower():find("chest") or v.Name:lower():find("gift") or v.Name:lower():find("lucky")) then
+            if States.ItemTracker then
+                if not v:FindFirstChild("Highlight") then
+                    local hl = Instance.new("Highlight")
+                    hl.FillColor = Color3.fromRGB(0, 170, 255)
+                    hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    hl.FillTransparency = 0.4
+                    hl.Parent = v
+                end
+            else
+                if v:FindFirstChild("Highlight") then v.Highlight:Destroy() end
+            end
+        end
+    end
+end
+
+task.spawn(function()
+    while true do
+        task.wait(4)
+        if States.ItemTracker then pcall(UpdateTrackers) end
+    end
+end)
+
+-- 4. Auto Claim Récompenses
+task.spawn(function()
+    while true do
+        task.wait(15)
+        local net = getNetwork()
+        if States.AutoClaimGifts and net then
+            pcall(function()
+                if net:FindFirstChild("FreeGifts_Claim") then
+                    for i = 1, 12 do
+                        net.FreeGifts_Claim:InvokeServer(i)
+                    end
+                end
+                if net:FindFirstChild("Ranks_ClaimReward") then
+                    for i = 1, 5 do
+                        net.Ranks_ClaimReward:InvokeServer(i)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- 5. Sniper Automatique de Distributeurs
+local vendingMachines = {"Potion Vending Machine", "Enchant Vending Machine", "Fruit Vending Machine"}
+task.spawn(function()
+    while true do
+        local net = getNetwork()
+        if States.AutoVending and net then
+            pcall(function()
+                if net:FindFirstChild("VendingMachine_Purchase") then
+                    for _, machine in pairs(vendingMachines) do
+                        net.VendingMachine_Purchase:InvokeServer(machine, 1)
+                    end
+                end
+            end)
+            task.wait(60)
+        else
+            task.wait(2)
+        end
+    end
+end)
+
+-- 6. Auto-Consommation des Potions
+local basePotions = {"Coins Potion I", "Damage Potion I", "Lucky Potion I", "Treasure Hunter Potion I"}
+task.spawn(function()
+    while true do
+        task.wait(10)
+        local net = getNetwork()
+        if States.AutoPotions and net then
+            pcall(function()
+                if net:FindFirstChild("Potions_Activate") then
+                    for _, potion in pairs(basePotions) do
+                        net.Potions_Activate:FireServer(potion)
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Ouverture/Fermeture globale du menu avec F
 UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.F then
         MainFrame.Visible = not MainFrame.Visible
     end
 end)
 
-print("✅ Script GitHub PS99 chargé avec succès. Utilisez la touche F pour interagir.")
+print("✅ [GanjaHub] Version 2.2 chargée ! Interface fluide disponible.")
