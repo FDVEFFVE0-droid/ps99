@@ -1,22 +1,22 @@
 -- =============================================
---   PET SIMULATOR 99 - MENU FUTURISTE NEON
---   Version Optimisée pour Delta Executor
+--   PET SIMULATOR 99 - CRIMSON EDITION
+--   Style Dark Red Cyber (comme Stresser)
 -- =============================================
 
-print("🚀 Menu Futuriste PS99 chargé")
+print("🔴 CRIMSON PS99 CHEAT LOADED")
 
 game.StarterGui:SetCore("SendNotification", {
-    Title = "PS99 Cyber Cheat",
-    Text = "Menu Neon activé avec succès !",
+    Title = "CRIMSON PS99",
+    Text = "Dark Red Protocol Activé",
     Duration = 5
 })
 
 local player = game.Players.LocalPlayer
 local root = player.Character:WaitForChild("HumanoidRootPart")
 
--- Auto Collect Orbs + Lootbags
+-- ==================== AUTO FARM ====================
 spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.18) do
         pcall(function()
             local things = workspace:FindFirstChild("__THINGS")
             if things then
@@ -35,102 +35,109 @@ spawn(function()
     end
 end)
 
+-- ====================== GUI CRIMSON ======================
 local sg = Instance.new("ScreenGui")
 sg.ResetOnSpawn = false
 sg.Parent = player:WaitForChild("PlayerGui")
 
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 430, 0, 590)
-Main.Position = UDim2.new(0.5, -215, 0.5, -295)
-Main.BackgroundColor3 = Color3.fromRGB(8, 8, 18)
+Main.Size = UDim2.new(0, 480, 0, 650)  -- Plus gros
+Main.Position = UDim2.new(0.5, -240, 0.5, -325)
+Main.BackgroundColor3 = Color3.fromRGB(8, 8, 12)
 Main.Parent = sg
 
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 18)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 10)
 
-local stroke = Instance.new("UIStroke", Main)
-stroke.Color = Color3.fromRGB(0, 255, 200)
-stroke.Thickness = 3
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.fromRGB(200, 0, 0)
+Stroke.Thickness = 4
+Stroke.Parent = Main
 
+-- Titre Style Stresser
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1,0,0,90)
-Title.BackgroundColor3 = Color3.fromRGB(0, 25, 45)
-Title.Text = "NEON•PS99"
-Title.TextColor3 = Color3.fromRGB(0, 255, 200)
+Title.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+Title.Text = "CRIMSON PS99"
+Title.TextColor3 = Color3.fromRGB(255, 40, 40)
 Title.TextScaled = true
 Title.Font = Enum.Font.GothamBlack
 Title.Parent = Main
-Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 18)
+Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
 
-local sub = Instance.new("TextLabel")
-sub.Size = UDim2.new(1,0,0,30)
-sub.Position = UDim2.new(0,0,0,65)
-sub.BackgroundTransparency = 1
-sub.Text = "2026 • CYBER EDITION"
-sub.TextColor3 = Color3.fromRGB(120, 255, 220)
-sub.TextScaled = true
-sub.Font = Enum.Font.Gotham
-sub.Parent = Main
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Size = UDim2.new(1,0,0,30)
+Subtitle.Position = UDim2.new(0,0,0,65)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Text = "DARK RED PROTOCOL v2026"
+Subtitle.TextColor3 = Color3.fromRGB(180, 0, 0)
+Subtitle.TextScaled = true
+Subtitle.Font = Enum.Font.GothamBold
+Subtitle.Parent = Main
 
--- Scroll
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1,-30,1,-150)
-scroll.Position = UDim2.new(0,15,0,120)
-scroll.BackgroundTransparency = 1
-scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 200)
-scroll.Parent = Main
+-- Scrolling
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(1, -40, 1, -150)
+Scroll.Position = UDim2.new(0, 20, 0, 120)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 8
+Scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 60, 60)
+Scroll.Parent = Main
 
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0, 18)
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 18)
+Layout.Parent = Scroll
 
-local function NewToggle(name)
-    local f = Instance.new("Frame")
-    f.Size = UDim2.new(1,0,0,70)
-    f.BackgroundColor3 = Color3.fromRGB(15,15,30)
-    f.Parent = scroll
-    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 14)
+local function CrimsonToggle(name)
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1,0,0,75)
+    Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    Frame.Parent = Scroll
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 12)
     
-    local s = Instance.new("UIStroke", f)
-    s.Color = Color3.fromRGB(0, 200, 255)
-    s.Thickness = 1.8
+    local s = Instance.new("UIStroke", Frame)
+    s.Color = Color3.fromRGB(150, 0, 0)
+    s.Thickness = 2
     
-    local lbl = Instance.new("TextLabel")
-    lbl.Size = UDim2.new(0.6,0,1,0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = "   "..name
-    lbl.TextColor3 = Color3.new(1,1,1)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Font = Enum.Font.GothamSemibold
-    lbl.TextSize = 18
-    lbl.Parent = f
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.65,0,1,0)
+    Label.BackgroundTransparency = 1
+    Label.Text = "   " .. name
+    Label.TextColor3 = Color3.new(1,1,1)
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Font = Enum.Font.GothamSemibold
+    Label.TextSize = 20
+    Label.Parent = Frame
     
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0,130,0,48)
-    btn.Position = UDim2.new(0.68,0,0.15,0)
-    btn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    btn.Text = "OFF"
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
-    btn.Parent = f
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 12)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 140, 0, 50)
+    Btn.Position = UDim2.new(0.68,0,0.15,0)
+    Btn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+    Btn.Text = "OFF"
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 18
+    Btn.Parent = Frame
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
     
-    local on = false
-    btn.MouseButton1Click:Connect(function()
-        on = not on
-        btn.BackgroundColor3 = on and Color3.fromRGB(50, 255, 50) or Color3.fromRGB(255, 50, 50)
-        btn.Text = on and "ON" or "OFF"
+    local enabled = false
+    Btn.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        Btn.BackgroundColor3 = enabled and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(180, 0, 0)
+        Btn.Text = enabled and "ON" or "OFF"
     end)
 end
 
-NewToggle("Auto Collect Orbs")
-NewToggle("Auto Tap")
-NewToggle("Fly")
-NewToggle("Noclip")
-NewToggle("Speed Boost")
-NewToggle("Auto Rebirth")
-NewToggle("Auto Hatch")
-NewToggle("Anti AFK")
+-- Toggles
+CrimsonToggle("Auto Collect Orbs")
+CrimsonToggle("Auto Tap")
+CrimsonToggle("Fly")
+CrimsonToggle("Noclip")
+CrimsonToggle("Speed Boost")
+CrimsonToggle("Auto Rebirth")
+CrimsonToggle("Auto Hatch")
+CrimsonToggle("Anti-AFK")
+CrimsonToggle("Godmode")
 
-scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 100)
+Scroll.CanvasSize = UDim2.new(0,0,0, Layout.AbsoluteContentSize.Y + 100)
 
-print("✅ Menu Futuriste chargé avec succès")
+print("🔴 Interface Crimson chargée - Essaye maintenant")
